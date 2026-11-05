@@ -46,6 +46,9 @@ module datapath(clk, rst);
 	wire [`MOVOPSIZE-1:0] movop;
 	wire [`WORDSIZE-1:0] readreg1;          /* value of 1st register read */
 	wire [`WORDSIZE-1:0] readreg2;          /* value of 2nd register read */
+	wire [`REGADDRSIZE-1:0] writeaddr;
+	wire [`WORDSIZE-1:0] decode_reg1;
+	wire [`WORDSIZE-1:0] decode_reg2;
 	wire [`WORDSIZE-1:0] extended;          /* output of sign-extension */
 	wire [`OPCODESIZE-1:0] opcode;
 	wire [`REGADDRSIZE-1:0] rm;
@@ -149,6 +152,15 @@ module datapath(clk, rst);
 	                : memwb_control[`MEMTOREG] ? memwb_readmem
 	                : memwb_res;
 
+	/* Capture writeback on the same edge as the ID-EX register. */
+	assign writeaddr = memwb_control[`PCTOREG] ? `XLR : memwb_rd;
+	assign decode_reg1 = (stage > 3'b011 && memwb_control[`REGWRITE]
+	                    && writeaddr != `XZR && writeaddr == ra)
+	                   ? writereg : readreg1;
+	assign decode_reg2 = (stage > 3'b011 && memwb_control[`REGWRITE]
+	                    && writeaddr != `XZR && writeaddr == rb)
+	                   ? writereg : readreg2;
+
 	/* count stages */
 	always @(posedge clk)
 		if (stage < {`COUNTERSIZE{1'b1}})
@@ -165,8 +177,8 @@ module datapath(clk, rst);
 	          aluop,
 	          movop,
 	          ifid_pc,
-	          readreg1,
-	          readreg2,
+	          decode_reg1,
+	          decode_reg2,
 	          extended,
 	          shamt,
 	          ra,
@@ -262,7 +274,7 @@ module datapath(clk, rst);
 	registerfile registerfile(clk, rst,
 	                          ra,
 	                          rb,
-	                          (memwb_control[`PCTOREG] ? `XLR : memwb_rd),
+	                          writeaddr,
 	                          writereg,
 	                          memwb_control[`REGWRITE],
 	                          readreg1,
