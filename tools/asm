@@ -331,7 +331,9 @@ function processdata(type, i) {
 
 # process MOV instructions
 function mov(opcode, lda, op, final) {
-	op = symtab[op]
+	# Resolve symbols without replacing numeric immediates by an empty entry.
+	if (op in symtab)
+		op = symtab[op]
 	final = substr(opcode, 10, 2)
 	if (!lda)
 		return dtob(op, 16)
