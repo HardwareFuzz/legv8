@@ -2,7 +2,7 @@
 
 module memwb(clk, nop, nopin,
              controlin,  opcodein,  pcin,  resin,  readmemin,  readreg2in,  readflagsin,  rdin,
-             controlout, opcodeout, pcout, resout, readmemout, readreg2out, readflagsout, rdout);
+             controlout, opcodeout, pcout, resout, readmemout, readreg2out, readflagsout, rdout, nopout);
 	input wire clk;
 	input wire nop;
 	input wire nopin;
@@ -30,6 +30,7 @@ module memwb(clk, nop, nopin,
 			controlout <= 'b0;
 		else
 			controlout <= controlin;
+		nopout       <= nop | nopin;
 		opcodeout    <= opcodein;
 		pcout        <= pcin;
 		readmemout   <= readmemin;

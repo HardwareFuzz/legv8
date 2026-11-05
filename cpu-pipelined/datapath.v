@@ -109,6 +109,9 @@ module datapath(clk, rst);
 
 	/* wires for WB stage */
 	wire branch;
+	wire branch_request;
+	wire memwb_nop;
+	assign branch = !memwb_nop && branch_request;
 	wire [`WORDSIZE-1:0] writereg;
 
 	/* initialize the stage counter */
@@ -235,7 +238,8 @@ module datapath(clk, rst);
 	            memwb_readmem,
 	            memwb_readreg2,
 	            memwb_readflags,
-	            memwb_rd);
+	            memwb_rd,
+	            memwb_nop);
 
 	/* Hazard Detection Unit: decides whether to stall pipeline */
 	hazard hazard(stage, idex_control[`MEMREAD], opcode,
@@ -288,12 +292,12 @@ module datapath(clk, rst);
 
 	/* read and write data from/into the memory */
 	memdata memdata(clk, rst, exmem_res, exmem_readreg2,
-	                exmem_control[`MEMREAD], exmem_control[`MEMWRITE],
+	                exmem_control[`MEMREAD] && !nop, exmem_control[`MEMWRITE] && !nop,
 	                readmem);
 
 	/* control the flags register */
-	flagsregister flagsreg(clk, rst, exmem_control[`SETFLAGS], exmem_flagstoset, readflags);
+	flagsregister flagsreg(clk, rst, exmem_control[`SETFLAGS] && !nop, exmem_flagstoset, readflags);
 
 	/* Branch Control: control whether to branch */
-	branchcontrol branchcontrol(memwb_opcode, memwb_readreg2, memwb_rd, memwb_readflags, branch);
+	branchcontrol branchcontrol(memwb_opcode, memwb_readreg2, memwb_rd, memwb_readflags, branch_request);
 endmodule
