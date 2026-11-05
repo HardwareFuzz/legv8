@@ -14,6 +14,9 @@ module programcounter(clk, rst, stall, branch, branchpc, pc);
 	always @(posedge clk or posedge rst)
 		if (rst)
 			pc <= {`WORDSIZE{1'b0}};
+		// A resolved branch redirects even if a younger load-use hazard stalls.
+		else if (branch)
+			pc <= branchpc;
 		else if (!stall)
-			pc <= (branch ? branchpc : pc + 'd4);
+			pc <= pc + 'd4;
 endmodule
