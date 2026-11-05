@@ -271,9 +271,9 @@ function writedata(bytes, bits, i) {
 }
 
 # process text instruction
-function processtext(normalize,  opcode) {
+function processtext(do_normalize,  opcode) {
 	# normalize instruction
-	if (normalize) {
+	if (do_normalize) {
 		$1 = toupper($1)
 		for (i = 2; i <= NF; i++)
 			$i = normalize($i)
